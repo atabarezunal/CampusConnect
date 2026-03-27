@@ -1,28 +1,28 @@
-# 🎓 CampusConnect
+# CampusConnect
 
-## 📖 Descripción
+## Descripción
 
 **CampusConnect** es un sistema distribuido basado en arquitectura de microservicios diseñado para mejorar la colaboración entre estudiantes universitarios.
 
 Permite a los usuarios:
 
-- 📚 Crear grupos de estudio
-- 📂 Compartir recursos académicos
-- 🤝 Colaborar en proyectos
-- 🔔 Recibir notificaciones en tiempo real
+-  Crear grupos de estudio
+-  Compartir recursos académicos
+-  Colaborar en proyectos
+-  Recibir notificaciones en tiempo real
 
 ---
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 El sistema está construido bajo una arquitectura de **microservicios**, donde cada servicio es independiente y especializado.
 
-### 🔀 API Gateway
+### API Gateway
 - **Laravel**
 - Punto de entrada único para todas las solicitudes
 - Manejo de autenticación y routing
 
-### 🧩 Microservicios
+### Microservicios
 
 | Servicio        | Tecnología | Descripción |
 |----------------|----------|------------|
@@ -34,7 +34,7 @@ El sistema está construido bajo una arquitectura de **microservicios**, donde c
 
 ---
 
-## 🗄️ Bases de Datos
+## Bases de Datos
 
 Cada microservicio utiliza la base de datos más adecuada según su necesidad:
 
@@ -48,7 +48,7 @@ Cada microservicio utiliza la base de datos más adecuada según su necesidad:
 
 ---
 
-## ⚙️ Tecnologías utilizadas
+## Tecnologías utilizadas
 
 - Laravel
 - Django
@@ -62,7 +62,7 @@ Cada microservicio utiliza la base de datos más adecuada según su necesidad:
 
 ---
 
-## 🚀 Instalación
+## Instalación
 
 ### 1. Clonar el repositorio
 ```bash
