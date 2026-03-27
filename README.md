@@ -61,6 +61,15 @@ Cada microservicio utiliza la base de datos más adecuada según su necesidad:
 - Firebase
 
 ---
+##  Modelo Relacional de Base de Datos
+
+- 🔗 [Ver modelo completo (lucidchart)]([https://draw.io/tu-modelo](https://lucid.app/lucidchart/6a07821e-0869-499c-8c9a-6236205f4cf5/edit?invitationId=inv_1f66d37c-e0c5-441f-84ec-7c4f94dc7c0d))
+
+Vista previa:
+
+![Modelo Relacional](docs/modelo-relacional/Modelo ER - CampusConnect -  Alejandro Tabarez.pdf)
+
+---
 
 ## Instalación
 
