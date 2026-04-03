@@ -26,4 +26,33 @@ class UserServiceController extends Controller
 
         return response()->json($response->json(), $response->status());
     }
+
+    public function createSkill(Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization' => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->post(env('USER_SERVICE_URL') . "/api/skills/create/", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function getSkills(Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization' => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->get(env('USER_SERVICE_URL') . "/api/skills/");
+
+        return response()->json($response->json(), $response->status());
+    }
+    public function assignSkill(Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization' => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->post(env('USER_SERVICE_URL') . "/api/skills/assign/", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
 }

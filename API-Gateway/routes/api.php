@@ -25,5 +25,9 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('role:student')->group(function () {
         Route::get('/profile/{id}', [UserServiceController::class, 'getProfile']);
         Route::post('/profile', [UserServiceController::class, 'createProfile']);
+
+        Route::post('/skills', [UserServiceController::class, 'createSkill']);
+        Route::get('/skills', [UserServiceController::class, 'getSkills']);
+        Route::post('/skills/assign', [UserServiceController::class, 'assignSkill']);
     });
 });
