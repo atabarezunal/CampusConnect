@@ -14,7 +14,7 @@ const authMiddleware = (req, res, next) => {
     if (!token) return res.status(401).json({ error: 'Token missing' });
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user_id = decoded.sub; // Extraemos el ID del usuario de Laravel
+        req.user_id = decoded.sub;
         next();
     } catch (err) {
         return res.status(401).json({ error: 'Invalid Token' });

@@ -14,3 +14,12 @@ exports.create = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.list = async (req, res) => {
+    try {
+        const groups = await Service.getMyGroups(req.user_id);
+        res.json(groups);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
