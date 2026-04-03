@@ -1,0 +1,16 @@
+const StudyGroup = require('../models/model');
+const Service = require('../services/service');
+
+exports.create = async (req, res) => {
+    const validation = StudyGroup.validate(req.body);
+    if (!validation.isValid) {
+        return res.status(400).json({ errors: validation.errors });
+    }
+    const cleanData = StudyGroup.format(req.body, req.user_id);
+    try {
+        const group = await Service.createGroup(cleanData, req.user_id);
+        res.status(201).json(group);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
