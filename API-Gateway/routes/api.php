@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserServiceController;
+use App\Http\Controllers\StudyGroupController;
 
 
 // --- RUTAS PÚBLICAS ---
@@ -29,5 +30,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/skills', [UserServiceController::class, 'createSkill']);
         Route::get('/skills', [UserServiceController::class, 'getSkills']);
         Route::post('/skills/assign', [UserServiceController::class, 'assignSkill']);
+
+        Route::get('/study-groups', [StudyGroupController::class, 'index']);
+        Route::post('/study-groups', [StudyGroupController::class, 'store']);
     });
 });
