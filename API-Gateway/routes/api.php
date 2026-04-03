@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\UserServiceController;
 
 
 // --- RUTAS PÚBLICAS ---
@@ -19,11 +19,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/refresh', [AuthController::class, 'refresh']);
 
     // --- RUTAS SOLO PARA ADMINISTRADORES ---
-    Route::middleware('role:admin')->group(function () {
-    });
+    Route::middleware('role:admin')->group(function () {});
 
     // --- RUTAS SOLO PARA ESTUDIANTES ---
     Route::middleware('role:student')->group(function () {
+        Route::get('/profile/{id}', [UserServiceController::class, 'getProfile']);
+        Route::post('/profile', [UserServiceController::class, 'createProfile']);
     });
-
 });
