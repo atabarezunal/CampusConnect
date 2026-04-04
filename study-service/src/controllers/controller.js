@@ -42,3 +42,23 @@ exports.getSessions = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.assignRole = async (req, res) => {
+    try {
+        const { groupId, targetUserId, role } = req.body;
+        const result = await Service.updateMemberRole(groupId, targetUserId, role, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(403).json({ error: error.message });
+    }
+};
+
+exports.inviteUser = async (req, res) => {
+    try {
+        const { groupId, invitedUserId } = req.body;
+        const invitation = await Service.createInvitation(groupId, invitedUserId, req.user_id);
+        res.status(201).json(invitation);
+    } catch (error) {
+        res.status(403).json({ error: error.message });
+    }
+};
