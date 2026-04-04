@@ -23,3 +23,13 @@ exports.list = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.createSession = async (req, res) => {
+    try {
+        const { groupId } = req.params; // Viene de la URL: /api/study/:groupId/sessions
+        const session = await Service.createSession(groupId, req.body);
+        res.status(201).json(session);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
