@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserServiceController;
 use App\Http\Controllers\StudyGroupController;
-
+use App\Http\Controllers\ProjectController;
 
 // --- RUTAS PÚBLICAS ---
 Route::post('/register', [AuthController::class, 'register']);
@@ -24,13 +24,15 @@ Route::middleware('auth:api')->group(function () {
 
     // --- RUTAS SOLO PARA ESTUDIANTES ---
     Route::middleware('role:student')->group(function () {
+        
+        //MICROSERVICIO USUARIOS
         Route::get('/profile/{id}', [UserServiceController::class, 'getProfile']);
         Route::post('/profile', [UserServiceController::class, 'createProfile']);
-
         Route::post('/skills', [UserServiceController::class, 'createSkill']);
         Route::get('/skills', [UserServiceController::class, 'getSkills']);
         Route::post('/skills/assign', [UserServiceController::class, 'assignSkill']);
 
+        //MICROSERVICIO GRUPOS DE ESTUDIO
         Route::get('/study-groups', [StudyGroupController::class, 'index']);
         Route::post('/study-groups', [StudyGroupController::class, 'store']);
         Route::get('/study-groups/{groupId}/sessions', [StudyGroupController::class, 'getSessions']);
@@ -40,5 +42,13 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/my-invitations', [StudyGroupController::class, 'getMyInvitations']);
         Route::post('/accept-invitation', [StudyGroupController::class, 'acceptInvitation']);
         Route::post('/reject-invitation', [StudyGroupController::class, 'rejectInvitation']);
+
+        //MICROSERVICIO DE PROYECTOS
+        Route::get('/projects', [ProjectController::class, 'getProjects']);
+        Route::post('/projects', [ProjectController::class, 'createProject']);
+        Route::delete('/projects/{id}', [ProjectController::class, 'deleteProject']);
+        Route::post('/projects/members', [ProjectController::class, 'addMember']);
+        Route::post('/tasks', [ProjectController::class, 'createTask']);
+        Route::get('/tasks/{id_project}', [ProjectController::class, 'getTasks']);
     });
 });
