@@ -33,5 +33,7 @@ Route::middleware('auth:api')->group(function () {
 
         Route::get('/study-groups', [StudyGroupController::class, 'index']);
         Route::post('/study-groups', [StudyGroupController::class, 'store']);
+        Route::get('/study-groups/{groupId}/sessions', [StudyGroupController::class, 'getSessions']);
+        Route::post('/study-groups/{groupId}/sessions', [StudyGroupController::class, 'createSession']);
     });
 });

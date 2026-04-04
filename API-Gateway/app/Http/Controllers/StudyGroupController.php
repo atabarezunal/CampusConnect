@@ -29,7 +29,26 @@ class StudyGroupController extends Controller
         $response = Http::withHeaders([
             'Authorization'  => $request->header('Authorization'),
             'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
-        ])->post("{$this->baseUrl}/", $request->all());
+        ])->post(env('STUDY_SERVICE_URL') . "/api/study/", $request->all());
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function createSession($groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->post(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/sessions", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function getSessions($groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->get(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/sessions");
 
         return response()->json($response->json(), $response->status());
     }

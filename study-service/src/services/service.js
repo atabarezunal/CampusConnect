@@ -47,6 +47,15 @@ class StudyService {
         await sessionRef.set(newSession);
         return newSession;
     }
+
+    async getSessionsByGroup(groupId) {
+        const snapshot = await db.ref(`sessions/${groupId}`).once('value');
+    
+        if (!snapshot.exists()) {
+            return [];
+        }
+        return Object.values(snapshot.val());
+    }
 }
 
 module.exports = new StudyService();

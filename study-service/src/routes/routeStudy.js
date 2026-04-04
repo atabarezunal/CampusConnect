@@ -24,5 +24,6 @@ const authMiddleware = (req, res, next) => {
 router.post('/', authMiddleware, controller.create);
 router.get('/my-groups', authMiddleware, controller.list);
 router.post('/:groupId/sessions', authMiddleware, controller.createSession);
+router.get('/:groupId/sessions', authMiddleware, controller.getSessions);
 
 module.exports = router;
