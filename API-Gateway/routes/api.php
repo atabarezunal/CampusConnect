@@ -37,5 +37,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/study-groups/{groupId}/sessions', [StudyGroupController::class, 'createSession']);
         Route::put('/study-groups/assign-role', [StudyGroupController::class, 'assignRole']);
         Route::post('/study-groups/invite', [StudyGroupController::class, 'inviteUser']);
+        Route::get('/my-invitations', [StudyGroupController::class, 'getMyInvitations']);
+        Route::post('/accept-invitation', [StudyGroupController::class, 'acceptInvitation']);
+        Route::post('/reject-invitation', [StudyGroupController::class, 'rejectInvitation']);
     });
 });

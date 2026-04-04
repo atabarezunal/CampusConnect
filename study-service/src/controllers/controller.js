@@ -62,3 +62,30 @@ exports.inviteUser = async (req, res) => {
         res.status(403).json({ error: error.message });
     }
 };
+
+exports.getMyInvitations = async (req, res) => {
+    try {
+        const invites = await Service.getMyInvitations(req.user_id);
+        res.json(invites);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.acceptInvite = async (req, res) => {
+    try {
+        const result = await Service.acceptInvitation(req.body.invitationId, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.rejectInvite = async (req, res) => {
+    try {
+        const result = await Service.rejectInvitation(req.body.invitationId, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};

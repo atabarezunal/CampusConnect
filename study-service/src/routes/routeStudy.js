@@ -27,5 +27,8 @@ router.post('/:groupId/sessions', authMiddleware, controller.createSession);
 router.get('/:groupId/sessions', authMiddleware, controller.getSessions);
 router.put('/assign-role', authMiddleware, controller.assignRole);
 router.post('/invite', authMiddleware, controller.inviteUser);
+router.get('/my-invitations', authMiddleware, controller.getMyInvitations);
+router.post('/accept-invitation', authMiddleware, controller.acceptInvite);
+router.post('/reject-invitation', authMiddleware, controller.rejectInvite);
 
 module.exports = router;

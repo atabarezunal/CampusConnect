@@ -108,7 +108,51 @@ class StudyService {
         return invitation;
     }
 
-    
+    async getMyInvitations(userId) {
+    const userIdStr = String(userId);
+    const snapshot = await db.ref('invitations').once('value');
+    if (!snapshot.exists()) return [];
+
+    // Filtramos manualmente las que son para este usuario y están pendientes
+    const invitations = [];
+    snapshot.forEach((child) => {
+        const invite = child.val();
+        if (String(invite.invitedUserId) === userIdStr && invite.status === 'pending') {
+            invitations.push(invite);
+        }
+    });
+    return invitations;
+}
+
+    async acceptInvitation(invitationId, userId) {
+        const userIdStr = String(userId);
+        const inviteRef = db.ref(`invitations/${invitationId}`);
+        const inviteSnap = await inviteRef.once('value');
+        if (!inviteSnap.exists()) throw new Error('Invitación no encontrada');
+        const invitation = inviteSnap.val();
+        if (String(invitation.invitedUserId) !== userIdStr) throw new Error('No es tu invitación');
+        if (invitation.status !== 'pending') throw new Error('Invitación ya procesada');
+        const updates = {};
+        updates[`/invitations/${invitationId}/status`] = 'accepted';
+        updates[`/members/${invitation.groupId}/${userIdStr}`] = { 
+            role: 'MEMBER', 
+            joined_at: new Date().toISOString() 
+        };
+        updates[`/user_groups/${userIdStr}/${invitation.groupId}`] = true;
+        await db.ref().update(updates);
+        return { message: "¡Te has unido al grupo!", groupId: invitation.groupId };
+    }
+
+
+    async rejectInvitation(invitationId, userId) {
+        const inviteRef = db.ref(`invitations/${invitationId}`);
+        const inviteSnap = await inviteRef.once('value');
+        if (!inviteSnap.exists()) throw new Error('Invitación no encontrada');
+        if (String(inviteSnap.val().invitedUserId) !== String(userId)) throw new Error('No autorizado');
+        await inviteRef.update({ status: 'rejected' });
+        return { message: "Invitación rechazada" };
+    }
+
 }
 
 module.exports = new StudyService();
