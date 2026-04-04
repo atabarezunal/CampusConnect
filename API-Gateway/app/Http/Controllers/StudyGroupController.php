@@ -26,10 +26,16 @@ class StudyGroupController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'id_subject' => 'required'
+        ]);
+
         $response = Http::withHeaders([
-            'Authorization'  => $request->header('Authorization'),
-            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+            'Authorization' => $request->header('Authorization'), 
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')           
         ])->post(env('STUDY_SERVICE_URL') . "/api/study/", $request->all());
+
         return response()->json($response->json(), $response->status());
     }
 
