@@ -23,3 +23,69 @@ exports.list = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.createSession = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const session = await Service.createSession(groupId, req.body);
+        res.status(201).json(session);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getSessions = async (req, res) => {
+    try {
+        const sessions = await Service.getSessionsByGroup(req.params.groupId);
+        res.json(sessions);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.assignRole = async (req, res) => {
+    try {
+        const { groupId, targetUserId, role } = req.body;
+        const result = await Service.updateMemberRole(groupId, targetUserId, role, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(403).json({ error: error.message });
+    }
+};
+
+exports.inviteUser = async (req, res) => {
+    try {
+        const { groupId, invitedUserId } = req.body;
+        const invitation = await Service.createInvitation(groupId, invitedUserId, req.user_id);
+        res.status(201).json(invitation);
+    } catch (error) {
+        res.status(403).json({ error: error.message });
+    }
+};
+
+exports.getMyInvitations = async (req, res) => {
+    try {
+        const invites = await Service.getMyInvitations(req.user_id);
+        res.json(invites);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.acceptInvite = async (req, res) => {
+    try {
+        const result = await Service.acceptInvitation(req.body.invitationId, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.rejectInvite = async (req, res) => {
+    try {
+        const result = await Service.rejectInvitation(req.body.invitationId, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
