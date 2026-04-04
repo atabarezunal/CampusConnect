@@ -70,13 +70,27 @@ class StudyGroupController extends Controller
 
     public function inviteUser(Request $request)
     {
-        $response = Http::withHeaders([
+        $studyResponse = Http::withHeaders([
             'Authorization' => $request->header('Authorization'),
             'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
         ])->post(env('STUDY_SERVICE_URL') . "/api/study/invite", $request->all());
-        return response()->json($response->json(), $response->status());
+        if ($studyResponse->successful()) {
+            $invitation = $studyResponse->json();
+            $invitedUser = \App\Models\User::find($request->invitedUserId);
+            if ($invitedUser) {
+                Http::withHeaders(['X-INTERNAL-KEY' => env('INTERNAL_API_KEY')])
+                    ->post(env('NOTIFICATION_SERVICE_URL') . "/api/notifications/send", [
+                        'userId'       => $invitedUser->id,
+                        'userName'     => $invitedUser->name,
+                        'groupName'    => 'Nuevo Grupo de Estudio', // Podrías pasar el nombre real si lo tienes
+                        'invitationId' => $invitation['id']
+                    ]);
+            }
+        }
+        return response()->json($studyResponse->json(), $studyResponse->status());
     }
-    
+
+
     public function getMyInvitations(Request $request)
     {
         $response = Http::withHeaders([

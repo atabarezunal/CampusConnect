@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserServiceController;
 use App\Http\Controllers\StudyGroupController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\NotificationController;
 
 // --- RUTAS PÚBLICAS ---
 Route::post('/register', [AuthController::class, 'register']);
@@ -24,7 +25,7 @@ Route::middleware('auth:api')->group(function () {
 
     // --- RUTAS SOLO PARA ESTUDIANTES ---
     Route::middleware('role:student')->group(function () {
-        
+
         //MICROSERVICIO USUARIOS
         Route::get('/profile/{id}', [UserServiceController::class, 'getProfile']);
         Route::post('/profile', [UserServiceController::class, 'createProfile']);
@@ -50,5 +51,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/projects/members', [ProjectController::class, 'addMember']);
         Route::post('/tasks', [ProjectController::class, 'createTask']);
         Route::get('/tasks/{id_project}', [ProjectController::class, 'getTasks']);
+        //MICROSERVICIO DE NOTIFICACIONES
+        Route::get('/my-notifications', [NotificationController::class, 'getMyNotifications']);
     });
 });
