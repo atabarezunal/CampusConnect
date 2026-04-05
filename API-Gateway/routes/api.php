@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificationController;
 // --- RUTAS PÚBLICAS ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 
 // --- RUTAS PROTEGIDAS POR JWT (AUTH) ---

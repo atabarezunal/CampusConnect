@@ -43,7 +43,25 @@ class AuthController extends Controller
 
         return $this->respondWithToken($token);
     }
+    
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'                 => 'required|email|exists:users,email',
+            'password'              => 'required|min:6|confirmed',
+            'password_confirmation' => 'required'
+        ]);
 
+        $user = User::where('email', $request->email)->first();
+
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        return response()->json([
+            'message' => 'Contraseña actualizada correctamente.'
+        ]);
+    }
 
     public function me()
     {
@@ -76,7 +94,7 @@ class AuthController extends Controller
             'user' => [
                 'name' => Auth::user()->name,
                 'email' => Auth::user()->email,
-                'role' => Auth::user()->role 
+                'role' => Auth::user()->role
             ]
         ]);
     }
