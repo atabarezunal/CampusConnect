@@ -26,11 +26,11 @@ El sistema está construido bajo una arquitectura de **microservicios**, donde c
 
 | Servicio | Tecnología | Descripción | Documentación |
 |---|---|---|---|
-| Auth | Laravel | Autenticación y autorización | [📄 Ver README](./docs/README.md) |
-| Users | Django | Gestión de usuarios | [📄 Ver README](./user_service/README.md) |
-| Study Groups | Express | Administración de grupos de estudio | [📄 Ver README](./study-service/README.md) |
-| Projects | Flask | Gestión de proyectos colaborativos | [📄 Ver README](./project-service/README.md) |
-| Notifications | Express | Sistema de notificaciones | [📄 Ver README](./notification-service/README.md) |
+| Auth | Laravel | Autenticación y autorización | [📄 Ver README](./docs/API-Gateway.md) |
+| Users | Django | Gestión de usuarios | [📄 Ver README](./user_service/User-Service.md) |
+| Study Groups | Express | Administración de grupos de estudio | [📄 Ver README](./study-service/Study-Service.md) |
+| Projects | Flask | Gestión de proyectos colaborativos | [📄 Ver README](./project-service/Project-Service.md) |
+| Notifications | Express | Sistema de notificaciones | [📄 Ver README](./notification-service/Notification-Service.md) |
 
 ---
 
@@ -91,11 +91,11 @@ cd campusconnect
 
 Consulta el README de cada microservicio para los pasos de instalación detallados:
 
-- [API Gateway (Laravel)](./api-gateway/README.md)
-- [User Service (Django)](./user_service/README.md)
-- [Study Service (Express)](./study-service/README.md)
-- [Project Service (Flask)](./project-service/README.md)
-- [Notification Service (Express)](./notification-service/README.md)
+- [API Gateway (Laravel)](./docs/API-Gateway.md)
+- [User Service (Django)](./user_service/User-Service.md)
+- [Study Service (Express)](./study-service/Study-Service.md)
+- [Project Service (Flask)](./project-service/Project-Service.md)
+- [Notification Service (Express)](./notification-service/Notification-Service.md)
 
 ### 3. Configuración de seguridad compartida
 
@@ -113,4 +113,4 @@ Consulta el README de cada microservicio para los pasos de instalación detallad
 
 Las pruebas de carga están implementadas con **Locust** y se encuentran en la carpeta `performance-tests/`.
 
-→ [📄 Ver documentación de pruebas](./performance-tests/README.md)
+→ [📄 Ver documentación de pruebas](./performance-tests/Performance-Tests.md)
