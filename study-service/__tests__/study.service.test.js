@@ -85,6 +85,58 @@ describe('Study Service Tests', () => {
   });
 
 
+  // TEST 4
+  test('Solo leader puede agregar miembros', async () => {
 
+    const once = jest.fn().mockResolvedValue({
+      exists: () => true,
+      val: () => ({
+        role: 'MEMBER'
+      })
+    });
+
+    db.ref.mockReturnValue({
+      once
+    });
+
+    await expect(
+      service.addMember(
+        'group1',
+        'user2',
+        'MODERATOR',
+        'user3'
+      )
+    ).rejects.toThrow(
+      'Solo el LEADER puede gestionar roles de moderación'
+    );
+  });
+
+
+  // TEST 5
+  test('Debe aceptar invitacion', async () => {
+
+    const once = jest.fn().mockResolvedValue({
+      exists: () => true,
+      val: () => ({
+        invitedUserId: '5',
+        status: 'pending',
+        groupId: 'group1'
+      })
+    });
+
+    const update = jest.fn().mockResolvedValue();
+
+    db.ref.mockImplementation(() => ({
+      once,
+      update
+    }));
+
+    const result = await service.acceptInvitation(
+      'inv1',
+      '5'
+    );
+
+    expect(result.message).toContain('unido');
+  });
 
 });
