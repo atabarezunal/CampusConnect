@@ -1,0 +1,164 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: campusconnect-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_AUTH_DATABASE}
+    command: ["mysqld", "--default-authentication-plugin=mysql_native_password"]
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - campusconnect-net
+
+  postgres-db:
+    image: postgres:16
+    container_name: campusconnect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - campusconnect-net
+
+  api-gateway:
+    build:
+      context: ./API-Gateway
+      dockerfile: Dockerfile
+    container_name: campusconnect-gateway
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV}
+      APP_DEBUG: ${APP_DEBUG}
+      APP_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: ${MYSQL_HOST}
+      DB_PORT: ${MYSQL_PORT}
+      DB_DATABASE: ${MYSQL_AUTH_DATABASE}
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      USER_SERVICE_URL: ${USER_SERVICE_URL}
+      STUDY_SERVICE_URL: ${STUDY_SERVICE_URL}
+      PROJECT_SERVICE_URL: ${PROJECT_SERVICE_URL}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql-db
+      - user-service
+      - project-service
+      - study-service
+      - notification-service
+    networks:
+      - campusconnect-net
+
+  user-service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: campusconnect-user-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${DB_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres-db
+    networks:
+      - campusconnect-net
+
+  project-service:
+    build:
+      context: ./project-service
+      dockerfile: Dockerfile
+    container_name: campusconnect-project-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PROJECT_DB_HOST: ${PROJECT_DB_HOST}
+      PROJECT_DB_PORT: ${PROJECT_DB_PORT}
+      PROJECT_DB_NAME: ${PROJECT_DB_NAME}
+      PROJECT_DB_USER: ${PROJECT_DB_USER}
+      PROJECT_DB_PASSWORD: ${PROJECT_DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+    ports:
+      - "8002:8002"
+    depends_on:
+      - mysql-db
+    networks:
+      - campusconnect-net
+
+  study-service:
+    build:
+      context: ./study-service
+      dockerfile: Dockerfile
+    container_name: campusconnect-study-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${STUDY_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      FIREBASE_DATABASE_URL: ${STUDY_FIREBASE_DATABASE_URL}
+      GOOGLE_APPLICATION_CREDENTIALS: ${STUDY_GOOGLE_APPLICATION_CREDENTIALS}
+    volumes:
+      - ./firebase/study-service.json:/app/firebase/study-service.json:ro
+    ports:
+      - "3001:3001"
+    networks:
+      - campusconnect-net
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: campusconnect-notification-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${NOTIFICATION_PORT}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      FIREBASE_DATABASE_URL: ${NOTIFICATION_FIREBASE_DATABASE_URL}
+      GOOGLE_APPLICATION_CREDENTIALS: ${NOTIFICATION_GOOGLE_APPLICATION_CREDENTIALS}
+    volumes:
+      - ./firebase/notification-service.json:/app/firebase/notification-service.json:ro
+    ports:
+      - "8003:8003"
+    networks:
+      - campusconnect-net
+
+volumes:
+  mysql_data:
+  postgres_data:
+
+networks:
+  campusconnect-net:
+    driver: bridge
