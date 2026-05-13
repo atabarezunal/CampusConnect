@@ -114,3 +114,7 @@ Consulta el README de cada microservicio para los pasos de instalación detallad
 Las pruebas de carga están implementadas con **Locust** y se encuentran en la carpeta `performance-tests/`.
 
 → [📄 Ver documentación de pruebas](./performance-tests/Performance-Tests.md)
+
+## Documentacion de Dockerizacion
+→ [📄 Ver documentación de Docker](./DockerizacionCampusConnect.md)
+
