@@ -1,0 +1,46 @@
+# =========================
+# ENV FILES
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# NODE
+# =========================
+node_modules/
+
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.pyc
+venv/
+
+# =========================
+# LARAVEL
+# =========================
+vendor/
+bootstrap/cache/*
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# =========================
+# FIREBASE KEYS
+# =========================
+serviceAccountKey.json
+firebase-adminsdk*.json
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
