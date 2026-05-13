@@ -146,6 +146,8 @@ Las pruebas de carga están implementadas con **Locust** y se encuentran en la c
 ## Documentacion de Dockerizacion
 → [📄 Ver documentación de Docker](./DockerizacionCampusConnect.md)
 
+---
+
 <div align="center">
 
 **¿Problemas con la instalación?** Abre un issue en el repositorio 🐛
