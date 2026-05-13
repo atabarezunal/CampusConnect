@@ -146,3 +146,12 @@ Las pruebas de carga están implementadas con **Locust** y se encuentran en la c
 ## Documentacion de Dockerizacion
 → [📄 Ver documentación de Docker](./DockerizacionCampusConnect.md)
 
+<div align="center">
+
+**¿Problemas con la instalación?** Abre un issue en el repositorio 🐛
+
+[![GitHub](https://img.shields.io/badge/GitHub-atabarezunal%2FCampusConnect-181717?style=for-the-badge&logo=github)](https://github.com/atabarezunal/CampusConnect)
+
+*Hecho para la comunidad universitaria*
+
+</div>
