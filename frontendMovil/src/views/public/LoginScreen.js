@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { BookOpen, Eye, Github, Lock, Mail } from 'lucide-react-native';
+import { BookOpen, Eye, GitBranch, Lock, Mail } from 'lucide-react-native';
 import { AppText, Button, ErrorBanner, Input, Screen } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -86,7 +86,7 @@ export function LoginScreen({ navigation }) {
             <AppText variant="caption">Google</AppText>
           </Pressable>
           <Pressable style={styles.socialButton}>
-            <Github size={18} color={colors.primary} />
+            <GitBranch size={18} color={colors.primary} />
             <AppText variant="caption">GitHub</AppText>
           </Pressable>
         </View>
