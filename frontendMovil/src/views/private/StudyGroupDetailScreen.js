@@ -67,7 +67,11 @@ export function StudyGroupDetailScreen({ navigation, route }) {
         <Chip label="Mar y Jue" />
       </View>
 
-      <Button title="Abrir Chat" onPress={() => {}} />
+      <Button title="Abrir Chat" onPress={() =>
+        navigation.navigate('Chat', {
+            groupId: group.id,
+        })
+      }/>
 
       <View style={styles.tabs}>
         <Chip label="Chat" active />

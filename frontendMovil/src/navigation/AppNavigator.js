@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ChatScreen } from '../views/private/ChatScreen';
 import {
   Bell,
   FolderKanban,
@@ -97,6 +98,7 @@ function PrivateNavigator() {
       <PrivateStack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
       <PrivateStack.Screen name="CreateProject" component={CreateProjectScreen} />
       <PrivateStack.Screen name="Resources" component={ResourcesScreen} />
+      <PrivateStack.Screen name="Chat" component={ChatScreen}/>
     </PrivateStack.Navigator>
   );
 }
