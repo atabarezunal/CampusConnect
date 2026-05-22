@@ -89,3 +89,32 @@ exports.rejectInvite = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
+exports.getMembers = async (req, res) => {
+    try {
+        const members = await Service.getMembers(req.params.groupId);
+        res.json(members);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.removeMember = async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        const { targetUserId } = req.body;
+        const result = await Service.removeMember(groupId, targetUserId, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(403).json({ error: error.message });
+    }
+};
+
+exports.deleteGroup = async (req, res) => {
+    try {
+        const result = await Service.deleteGroup(req.params.groupId, req.user_id);
+        res.json(result);
+    } catch (error) {
+        res.status(403).json({ error: error.message });
+    }
+};

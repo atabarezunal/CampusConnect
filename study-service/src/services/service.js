@@ -153,6 +153,49 @@ class StudyService {
         return { message: "Invitación rechazada" };
     }
 
+    async getMembers(groupId) {
+    const snapshot = await db.ref(`members/${groupId}`).once('value');
+    if (!snapshot.exists()) return [];
+    return Object.entries(snapshot.val()).map(([userId, data]) => ({
+        userId,
+        ...data,
+    }));
+}
+
+    async removeMember(groupId, targetUserId, requesterId) {
+        const requesterSnap = await db.ref(`members/${groupId}/${requesterId}`).once('value');
+        if (!requesterSnap.exists() || requesterSnap.val().role !== 'LEADER') {
+            throw new Error('Solo el LEADER puede expulsar miembros');
+        }
+        if (String(targetUserId) === String(requesterId)) {
+            throw new Error('No puedes expulsarte a ti mismo');
+        }
+        const updates = {};
+        updates[`/members/${groupId}/${targetUserId}`] = null;
+        updates[`/user_groups/${targetUserId}/${groupId}`] = null;
+        await db.ref().update(updates);
+        return { message: 'Miembro expulsado del grupo' };
+    }
+
+    async deleteGroup(groupId, requesterId) {
+        const requesterSnap = await db.ref(`members/${groupId}/${requesterId}`).once('value');
+        if (!requesterSnap.exists() || requesterSnap.val().role !== 'LEADER') {
+            throw new Error('Solo el LEADER puede eliminar el grupo');
+        }
+        // Limpiar referencias de todos los miembros
+        const membersSnap = await db.ref(`members/${groupId}`).once('value');
+        const updates = {};
+        if (membersSnap.exists()) {
+            Object.keys(membersSnap.val()).forEach((uid) => {
+                updates[`/user_groups/${uid}/${groupId}`] = null;
+            });
+        }
+        updates[`/groups/${groupId}`] = null;
+        updates[`/members/${groupId}`] = null;
+        updates[`/sessions/${groupId}`] = null;
+        await db.ref().update(updates);
+        return { message: 'Grupo eliminado correctamente' };
+    }
 }
 
 module.exports = new StudyService();
