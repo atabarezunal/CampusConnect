@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/controller');
 const jwt = require('jsonwebtoken');
+const chatController = require('../controllers/chatController');
 
 const authMiddleware = (req, res, next) => {
     const internalKey = req.headers['x-internal-key'];
@@ -30,5 +31,9 @@ router.post('/invite', authMiddleware, controller.inviteUser);
 router.get('/my-invitations', authMiddleware, controller.getMyInvitations);
 router.post('/accept-invitation', authMiddleware, controller.acceptInvite);
 router.post('/reject-invitation', authMiddleware, controller.rejectInvite);
+
+router.post('/:groupId/chat', authMiddleware, chatController.createChat);
+router.post('/:groupId/messages', authMiddleware, chatController.sendMessage);
+router.get('/:groupId/messages', authMiddleware, chatController.getMessages);
 
 module.exports = router;
