@@ -150,4 +150,36 @@ class StudyGroupController extends Controller
 
         return response()->json($response->json(), $response->status());
     }
+
+    public function getMembers(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->get(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/members");
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function removeMember(string $groupId, Request $request)
+    {
+        $request->validate(['targetUserId' => 'required']);
+
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->delete(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/members", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function deleteGroup(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->delete(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}");
+
+        return response()->json($response->json(), $response->status());
+    }
 }
