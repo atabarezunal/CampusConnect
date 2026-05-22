@@ -1,7 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, TextInput, View, KeyboardAvoidingView, ScrollView, Platform } from 'react-native'; // [1] Añadidos componentes para teclado y scroll
-import { ArrowLeft, FileText, Image, MoreHorizontal, Paperclip, Send, UsersRound } from 'lucide-react-native';
-import { ref, query, limitToLast, onValue } from 'firebase/database';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+import {
+  ArrowLeft,
+  Crown,
+  FileText,
+  Image,
+  MoreHorizontal,
+  Paperclip,
+  Send,
+  Shield,
+  Trash2,
+  User,
+  UserMinus,
+  UsersRound,
+} from 'lucide-react-native';
+import { limitToLast, onValue, query, ref } from 'firebase/database';
 
 import {
   AppText,
@@ -19,214 +41,396 @@ import { chatService } from '../../services/chatService';
 import { database } from '../../config/firebase';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 
+// ─── Íconos de rol ────────────────────────────────────────────────────────────
+const ROLE_META = {
+  LEADER:    { label: 'Líder',     Icon: Crown,  color: colors.warning  ?? '#F59E0B' },
+  MODERATOR: { label: 'Moderador', Icon: Shield, color: colors.info     ?? '#3B82F6' },
+  MEMBER:    { label: 'Miembro',   Icon: User,   color: colors.secondary             },
+};
+
+const ASSIGNABLE_ROLES = ['MEMBER', 'MODERATOR'];
+
+// ─── Tabs disponibles ─────────────────────────────────────────────────────────
+const TABS = ['Chat', 'Sesiones', 'Miembros'];
+
 export function StudyGroupDetailScreen({ navigation, route }) {
   const { accessToken, user } = useAuth();
-  const group = route.params?.group || {};
-  const groupId = group.id || group.groupId;
+  const group   = route.params?.group ?? {};
+  const groupId = group.id ?? group.groupId;
 
-  const [sessionTitle, setSessionTitle] = useState('');
-  const [chatText, setChatText] = useState('');
+  // ── Estado de UI ────────────────────────────────────────────────────────────
+  const [activeTab,   setActiveTab]   = useState('Chat');
+  const [chatText,    setChatText]    = useState('');
   const [sendingChat, setSendingChat] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
 
+  // Sesiones
+  const [sessionTopic, setSessionTopic] = useState('');
+  const [sessionDate,  setSessionDate]  = useState('');
+  const [savingSession, setSavingSession] = useState(false);
+
+  // Miembros
+  const [members,      setMembers]      = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [myRole,       setMyRole]       = useState(null);
+
+  // ── Sesiones via hook ───────────────────────────────────────────────────────
   const loadSessions = useCallback(
     (token) => (groupId ? studyGroupService.getSessions(groupId, token) : []),
     [groupId]
   );
-  const { data: sessions, error, refetch } = useServiceData(loadSessions, [groupId]);
+  const { data: sessions, error: sessionsError, refetch } = useServiceData(loadSessions, [groupId]);
 
+  // ── Último mensaje en tiempo real ──────────────────────────────────────────
   useEffect(() => {
     if (!groupId) return;
-
-    const messagesRef = ref(database, `messages/${groupId}`);
-    const lastMessageQuery = query(messagesRef, limitToLast(1));
-
-    const unsubscribe = onValue(lastMessageQuery, (snapshot) => {
-      if (!snapshot.exists()) {
-        setLastMessage(null);
-        return;
-      }
-      
-      const data = snapshot.val();
-      const msgArray = Object.values(data);
-      if (msgArray.length > 0) {
-        setLastMessage(msgArray[0]); // [2] Corregido: Tomar el primer índice del arreglo devuelto
-      }
+    const q = query(ref(database, `messages/${groupId}`), limitToLast(1));
+    return onValue(q, (snap) => {
+      if (!snap.exists()) return setLastMessage(null);
+      const vals = Object.values(snap.val());
+      setLastMessage(vals[0] ?? null);
     });
-
-    return () => unsubscribe();
   }, [groupId]);
 
-  const handleSendChatMessage = async () => {
-    if (!chatText.trim() || !groupId || sendingChat) return;
-
+  // ── Cargar miembros ─────────────────────────────────────────────────────────
+  const fetchMembers = useCallback(async () => {
+    if (!groupId || !accessToken) return;
+    setLoadingMembers(true);
     try {
-      setSendingChat(true);
-      await chatService.sendMessage(
-        groupId,
-        {
-          text: chatText,
-          sender_name: user.name,
-        },
-        accessToken
-      );
+      const data = await studyGroupService.getMembers(groupId, accessToken);
+      setMembers(data);
+      const me = data.find((m) => String(m.userId) === String(user?.id));
+      setMyRole(me?.role ?? null);
+    } catch (e) {
+      console.warn('Error cargando miembros:', e);
+    } finally {
+      setLoadingMembers(false);
+    }
+  }, [groupId, accessToken, user?.id]);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  const isLeader = myRole === 'LEADER';
+
+  // ── Enviar mensaje ──────────────────────────────────────────────────────────
+  const handleSendChat = async () => {
+    if (!chatText.trim() || !groupId || sendingChat) return;
+    setSendingChat(true);
+    try {
+      await chatService.sendMessage(groupId, { text: chatText, sender_name: user?.name }, accessToken);
       setChatText('');
-    } catch (err) {
-      console.log('Error enviando mensaje desde detalle:', err);
+    } catch (e) {
+      console.warn('Error enviando mensaje:', e);
     } finally {
       setSendingChat(false);
     }
   };
 
-  const createSession = async () => {
-    if (!sessionTitle.trim() || !groupId) return;
-    await studyGroupService.createSession(groupId, { title: sessionTitle, date: new Date().toISOString() }, accessToken);
-    setSessionTitle('');
-    refetch();
-  };
-
-  const getInitials = (name) => {
-    if (!name) return '??';
-    return name
-      .split(' ')
-      .map((n) => n[0]) // [3] Corregido: Extraer la primera letra de cada palabra
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
+  // ── Crear sesión ────────────────────────────────────────────────────────────
+  const handleCreateSession = async () => {
+    if (!sessionTopic.trim() || !groupId) return;
+    setSavingSession(true);
     try {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      await studyGroupService.createSession(
+        groupId,
+        { topic: sessionTopic, date: sessionDate || new Date().toISOString() },
+        accessToken
+      );
+      setSessionTopic('');
+      setSessionDate('');
+      refetch();
     } catch (e) {
-      return '';
+      Alert.alert('Error', e.message);
+    } finally {
+      setSavingSession(false);
     }
   };
 
+  // ── Asignar rol ─────────────────────────────────────────────────────────────
+  const handleAssignRole = (member) => {
+    if (!isLeader) return;
+    Alert.alert(
+      `Rol de ${member.userId}`,
+      'Selecciona el nuevo rol',
+      ASSIGNABLE_ROLES.map((role) => ({
+        text: ROLE_META[role]?.label ?? role,
+        onPress: async () => {
+          try {
+            await studyGroupService.assignRole(
+              { groupId, targetUserId: member.userId, role },
+              accessToken
+            );
+            await fetchMembers();
+          } catch (e) {
+            Alert.alert('Error', e.message);
+          }
+        },
+      })).concat([{ text: 'Cancelar', style: 'cancel' }])
+    );
+  };
+
+  // ── Expulsar miembro ────────────────────────────────────────────────────────
+  const handleRemoveMember = (member) => {
+    Alert.alert(
+      'Expulsar miembro',
+      `¿Expulsar a ${member.userId} del grupo?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Expulsar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await studyGroupService.removeMember(groupId, member.userId, accessToken);
+              await fetchMembers();
+            } catch (e) {
+              Alert.alert('Error', e.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // ── Eliminar grupo ──────────────────────────────────────────────────────────
+  const handleDeleteGroup = () => {
+    Alert.alert(
+      'Eliminar grupo',
+      '¿Estás seguro? Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await studyGroupService.deleteGroup(groupId, accessToken);
+              navigation.goBack();
+            } catch (e) {
+              Alert.alert('Error', e.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const getInitials = (name = '') =>
+    name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '??';
+
+  const formatTime = (iso) => {
+    try { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+    catch { return ''; }
+  };
+
+  // ── Render tabs ─────────────────────────────────────────────────────────────
+  const renderChat = () => (
+    <View style={styles.messages}>
+      {lastMessage ? (
+        <View style={styles.messageRow}>
+          <View style={styles.messageAvatar}>
+            <AppText variant="caption">{getInitials(lastMessage.sender_name)}</AppText>
+          </View>
+          <View style={styles.messageBubble}>
+            <AppText variant="caption" color={colors.secondary}>{lastMessage.sender_name}</AppText>
+            <AppText variant="caption">{lastMessage.text}</AppText>
+            <AppText variant="caption" color={colors.muted}>{formatTime(lastMessage.created_at)}</AppText>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.emptyBox}>
+          <AppText variant="caption" color={colors.muted}>No hay mensajes aún</AppText>
+        </View>
+      )}
+
+      <Button
+        title="Abrir Chat completo"
+        onPress={() => navigation.navigate('Chat', { groupId })}
+      />
+    </View>
+  );
+
+  const renderSessions = () => (
+    <View style={styles.sectionBlock}>
+      <ErrorBanner message={sessionsError} />
+
+      {/* Lista de sesiones */}
+      {sessions.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <AppText variant="caption" color={colors.muted}>Sin sesiones registradas</AppText>
+        </View>
+      ) : (
+        sessions.map((s) => (
+          <Card key={s.id} style={styles.sessionItem}>
+            <AppText variant="section">{s.topic ?? s.title ?? 'Sesión'}</AppText>
+            <AppText variant="caption" color={colors.secondary}>
+              {s.date ? new Date(s.date).toLocaleDateString() : ''}
+            </AppText>
+          </Card>
+        ))
+      )}
+
+      {/* Crear sesión */}
+      <Card style={styles.sessionComposer}>
+        <View style={styles.sessionHeader}>
+          <FileText size={18} color={colors.primary} />
+          <AppText variant="section">Nueva sesión</AppText>
+        </View>
+        <TextInput
+          value={sessionTopic}
+          onChangeText={setSessionTopic}
+          placeholder="Tema de la sesión..."
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+        />
+        <TextInput
+          value={sessionDate}
+          onChangeText={setSessionDate}
+          placeholder="Fecha (YYYY-MM-DD) — opcional"
+          placeholderTextColor={colors.muted}
+          style={styles.input}
+        />
+        <Button
+          title={savingSession ? 'Guardando…' : 'Crear sesión'}
+          onPress={handleCreateSession}
+          disabled={savingSession || !sessionTopic.trim()}
+        />
+      </Card>
+    </View>
+  );
+
+  const renderMembers = () => (
+    <View style={styles.sectionBlock}>
+      {loadingMembers ? (
+        <AppText variant="caption" color={colors.muted}>Cargando miembros…</AppText>
+      ) : members.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <AppText variant="caption" color={colors.muted}>Sin miembros</AppText>
+        </View>
+      ) : (
+        members.map((member) => {
+          const meta  = ROLE_META[member.role] ?? ROLE_META.MEMBER;
+          const RoleIcon = meta.Icon;
+          const isSelf = String(member.userId) === String(user?.id);
+          return (
+            <Card key={member.userId} style={styles.memberRow}>
+              {/* Avatar */}
+              <View style={styles.memberAvatar}>
+                <AppText variant="caption">{getInitials(member.userId)}</AppText>
+              </View>
+
+              {/* Info */}
+              <View style={styles.memberInfo}>
+                <AppText variant="section">
+                  {member.userId}{isSelf ? ' (tú)' : ''}
+                </AppText>
+                <View style={styles.roleChip}>
+                  <RoleIcon size={12} color={meta.color} />
+                  <AppText variant="caption" color={meta.color}> {meta.label}</AppText>
+                </View>
+              </View>
+
+              {/* Acciones del líder */}
+              {isLeader && !isSelf && (
+                <View style={styles.memberActions}>
+                  <Pressable onPress={() => handleAssignRole(member)} style={styles.actionBtn}>
+                    <Shield size={16} color={colors.info ?? '#3B82F6'} />
+                  </Pressable>
+                  <Pressable onPress={() => handleRemoveMember(member)} style={styles.actionBtn}>
+                    <UserMinus size={16} color={colors.danger ?? '#EF4444'} />
+                  </Pressable>
+                </View>
+              )}
+            </Card>
+          );
+        })
+      )}
+    </View>
+  );
+
+  // ── Render principal ────────────────────────────────────────────────────────
   return (
     <Screen scroll={false}>
-      {/* KeyboardAvoidingView levanta toda la interfaz al abrir el teclado */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {/* ScrollView permite deslizar el contenido superior si el teclado ocupa espacio */}
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+          {/* Top bar */}
           <View style={styles.topBar}>
             <IconButton icon={ArrowLeft} onPress={() => navigation.goBack()} accessibilityLabel="Volver" />
-            <IconButton icon={MoreHorizontal} accessibilityLabel="Mas opciones" />
-          </View>
-
-          <View style={styles.heroArt}>
-            <UsersRound size={28} color={colors.primary} />
-          </View>
-
-          <AppText variant="title">{group.name || 'Grupo de estudio'}</AppText>
-          <AppText variant="caption" color={colors.secondary} style={styles.subject}>
-            {group.id_subject || 'Materia'} - 6to Semestre
-          </AppText>
-
-          <View style={styles.metaRow}>
-            <Chip label="12 miembros" />
-            <Chip label="Mar y Jue" />
-          </View>
-
-          <Button title="Abrir Chat" onPress={() =>
-            navigation.navigate('Chat', {
-                groupId: groupId,
-            })
-          }/>
-
-          <View style={styles.tabs}>
-            <Chip label="Chat" active />
-            <Chip label="Recursos" />
-            <Chip label="Miembros" />
-          </View>
-
-          <ErrorBanner message={error} />
-
-          <View style={styles.messages}>
-            {lastMessage ? (
-              <View style={styles.messageRow}>
-                <View style={styles.messageAvatar}>
-                  <AppText variant="caption">{getInitials(lastMessage.sender_name)}</AppText>
-                </View>
-                <View style={styles.messageBubble}>
-                  <AppText variant="caption" color={colors.secondary}>
-                    {lastMessage.sender_name}
-                  </AppText>
-                  <AppText variant="caption">{lastMessage.text}</AppText>
-                  <AppText variant="caption" color={colors.muted}>
-                    {formatTime(lastMessage.created_at)}
-                  </AppText>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.noMessagesContainer}>
-                <AppText variant="caption" color={colors.muted}>
-                  No hay mensajes aún
-                </AppText>
-              </View>
+            {isLeader && (
+              <IconButton
+                icon={Trash2}
+                onPress={handleDeleteGroup}
+                accessibilityLabel="Eliminar grupo"
+              />
             )}
           </View>
 
-          <Card style={styles.sessionComposer}>
-            <View style={styles.sessionHeader}>
-              <FileText size={18} color={colors.primary} />
-              <AppText variant="section">Sesiones</AppText>
-              <AppText variant="caption" color={colors.secondary}>
-                {sessions.length}
-              </AppText>
-            </View>
-            <View style={styles.composerRow}>
-              <TextInput
-                value={sessionTitle}
-                onChangeText={setSessionTitle}
-                placeholder="Nueva sesion..."
-                placeholderTextColor={colors.muted}
-                style={styles.messageInput}
-              />
-              <IconButton icon={Send} active onPress={createSession} accessibilityLabel="Crear sesion" />
-            </View>
-          </Card>
+          {/* Hero */}
+          <View style={styles.heroArt}>
+            <UsersRound size={28} color={colors.primary} />
+          </View>
+          <AppText variant="title">{group.name ?? 'Grupo de estudio'}</AppText>
+          <AppText variant="caption" color={colors.secondary} style={styles.subject}>
+            {group.id_subject ?? 'Materia'}
+          </AppText>
+
+          <View style={styles.metaRow}>
+            <Chip label={`${members.length} miembros`} />
+            {myRole && <Chip label={ROLE_META[myRole]?.label ?? myRole} tone="info" />}
+          </View>
+
+          {/* Tabs */}
+          <View style={styles.tabs}>
+            {TABS.map((tab) => (
+              <Pressable key={tab} onPress={() => setActiveTab(tab)}>
+                <Chip label={tab} active={activeTab === tab} />
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Contenido del tab activo */}
+          {activeTab === 'Chat'     && renderChat()}
+          {activeTab === 'Sesiones' && renderSessions()}
+          {activeTab === 'Miembros' && renderMembers()}
+
         </ScrollView>
 
-        {/* El ChatBar se queda fuera de la ScrollView para permanecer fijo en la parte inferior */}
-        <View style={styles.chatBar}>
-          <IconButton icon={Paperclip} accessibilityLabel="Adjuntar" />
-          <IconButton icon={Image} accessibilityLabel="Imagen" />
-          <TextInput
-            value={chatText}
-            onChangeText={setChatText}
-            placeholder="Escribe un mensaje..."
-            placeholderTextColor={colors.muted}
-            style={styles.chatInput}
-          />
-          <IconButton 
-            icon={Send} 
-            active={chatText.trim().length > 0 && !sendingChat} 
-            onPress={handleSendChatMessage}
-            accessibilityLabel="Enviar" 
-          />
-        </View>
+        {/* Chat bar fija (solo visible en tab Chat) */}
+        {activeTab === 'Chat' && (
+          <View style={styles.chatBar}>
+            <IconButton icon={Paperclip} accessibilityLabel="Adjuntar" />
+            <IconButton icon={Image}     accessibilityLabel="Imagen"   />
+            <TextInput
+              value={chatText}
+              onChangeText={setChatText}
+              placeholder="Escribe un mensaje..."
+              placeholderTextColor={colors.muted}
+              style={styles.chatInput}
+            />
+            <IconButton
+              icon={Send}
+              active={chatText.trim().length > 0 && !sendingChat}
+              onPress={handleSendChat}
+              accessibilityLabel="Enviar"
+            />
+          </View>
+        )}
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: spacing.md, // Espacio para que el contenido no quede pegado al chatBar
-  },
+  container:     { flex: 1 },
+  scrollContent: { paddingBottom: spacing.md },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -234,42 +438,23 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   heroArt: {
-    width: 58,
-    height: 58,
+    width: 58, height: 58,
     borderRadius: radius.md,
     backgroundColor: colors.infoSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  subject: {
-    marginTop: spacing.xs,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginVertical: spacing.md,
-  },
-  tabs: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginVertical: spacing.lg,
-  },
-  messages: {
-    gap: spacing.md,
-    marginVertical: spacing.sm,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
+  subject:  { marginTop: spacing.xs },
+  metaRow:  { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.md },
+  tabs:     { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.lg },
+  messages: { gap: spacing.md, marginVertical: spacing.sm },
+  messageRow: { flexDirection: 'row', gap: spacing.sm },
   messageAvatar: {
-    width: 32,
-    height: 32,
+    width: 32, height: 32,
     borderRadius: radius.full,
     backgroundColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   messageBubble: {
     flex: 1,
@@ -280,7 +465,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
-  noMessagesContainer: {
+  emptyBox: {
     padding: spacing.md,
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -288,36 +473,45 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  sessionComposer: {
-    marginTop: spacing.lg,
-    gap: spacing.md,
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  composerRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  messageInput: {
-    flex: 1,
+  sectionBlock:  { gap: spacing.md, marginTop: spacing.sm },
+  sessionItem:   { gap: spacing.xs },
+  sessionComposer: { marginTop: spacing.md, gap: spacing.md },
+  sessionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  input: {
     minHeight: 42,
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     backgroundColor: colors.softBorder,
     paddingHorizontal: spacing.md,
     color: colors.text,
     fontFamily: typography.family,
   },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  memberAvatar: {
+    width: 40, height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.infoSoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  memberInfo:    { flex: 1, gap: 2 },
+  roleChip:      { flexDirection: 'row', alignItems: 'center' },
+  memberActions: { flexDirection: 'row', gap: spacing.sm },
+  actionBtn: {
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   chatBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginTop: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.background, // Evita transparencias al subir
+    backgroundColor: colors.background,
   },
   chatInput: {
     flex: 1,
