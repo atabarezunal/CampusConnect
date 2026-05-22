@@ -45,6 +45,10 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/accept-invitation', [StudyGroupController::class, 'acceptInvitation']);
         Route::post('/reject-invitation', [StudyGroupController::class, 'rejectInvitation']);
 
+        Route::post('/study-groups/{groupId}/chat', [StudyGroupController::class, 'createChat']);
+        Route::post('/study-groups/{groupId}/messages', [StudyGroupController::class, 'sendMessage']);
+        Route::get('/study-groups/{groupId}/messages', [StudyGroupController::class, 'getMessages']);
+
         //MICROSERVICIO DE PROYECTOS
         Route::get('/projects', [ProjectController::class, 'getProjects']);
         Route::post('/projects', [ProjectController::class, 'createProject']);

@@ -120,4 +120,34 @@ class StudyGroupController extends Controller
 
         return response()->json($response->json(), $response->status());
     }
+
+    public function createChat(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization' => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->post(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/chat");
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function sendMessage(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization' => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->post(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/messages", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function getMessages(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization' => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->get(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/messages");
+
+        return response()->json($response->json(), $response->status());
+    }
 }
