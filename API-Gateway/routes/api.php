@@ -57,9 +57,12 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/projects', [ProjectController::class, 'getProjects']);
         Route::post('/projects', [ProjectController::class, 'createProject']);
         Route::delete('/projects/{id}', [ProjectController::class, 'deleteProject']);
+        Route::get('/projects/{id}/members', [ProjectController::class, 'getProjectMembers']);
         Route::post('/projects/members', [ProjectController::class, 'addMember']);
+        Route::delete('/projects/{id}/members', [ProjectController::class, 'removeProjectMember']);
         Route::post('/tasks', [ProjectController::class, 'createTask']);
         Route::get('/tasks/{id_project}', [ProjectController::class, 'getTasks']);
+        Route::patch('/tasks/{id_task}', [ProjectController::class, 'updateTaskStatus']);
         //MICROSERVICIO DE NOTIFICACIONES
         Route::get('/my-notifications', [NotificationController::class, 'getMyNotifications']);
 
