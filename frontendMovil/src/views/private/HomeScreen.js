@@ -134,7 +134,9 @@ export function HomeScreen({ navigation }) {
       )}
 
       <SectionHeader title="Proyectos activos" action="Ver todos" onAction={() => navigation.navigate('Projects')} />
-      {displayProjects.slice(0, 2).map((project) => (
+      {displayProjects.slice(0, 2).map((project) => {
+      const progress = project.progress ?? 0;
+      return (
         <Pressable
           key={project.id_project || project.id || project.title}
           onPress={() => navigation.navigate('ProjectDetail', { project })}
@@ -147,16 +149,26 @@ export function HomeScreen({ navigation }) {
               <AppText variant="section" numberOfLines={2}>
                 {project.title}
               </AppText>
-              <AppText variant="caption" color={colors.secondary} numberOfLines={2}>
+              <AppText variant="caption" color={colors.secondary} numberOfLines={1}>
                 {project.description}
               </AppText>
+              {/* Mini barra de progreso */}
+              <View style={styles.miniTrack}>
+                <View
+                  style={[
+                    styles.miniFill,
+                    { width: progress > 0 ? `${progress}%` : '2%' },
+                  ]}
+                />
+              </View>
             </View>
             <AppText variant="caption" color={colors.primary} style={styles.percent}>
-              65%
+              {progress}%
             </AppText>
           </Card>
         </Pressable>
-      ))}
+      );
+    })}
     </Screen>
   );
 }
@@ -252,5 +264,16 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  miniTrack: {
+  height: 4,
+  backgroundColor: colors.border,
+  borderRadius: radius.full,
+  marginTop: spacing.xs,
+  },
+  miniFill: {
+    height: 4,
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
   },
 });
