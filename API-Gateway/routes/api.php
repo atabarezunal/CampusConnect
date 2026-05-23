@@ -33,6 +33,10 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/skills', [UserServiceController::class, 'createSkill']);
         Route::get('/skills', [UserServiceController::class, 'getSkills']);
         Route::post('/skills/assign', [UserServiceController::class, 'assignSkill']);
+        
+        Route::patch('/profile/{id}',        [UserServiceController::class, 'updateProfile']);
+        Route::get('/profile/{id}/skills',   [UserServiceController::class, 'getUserSkills']);
+        Route::delete('/account', [AuthController::class, 'deleteAccount']);
 
         //MICROSERVICIO GRUPOS DE ESTUDIO
         Route::get('/study-groups', [StudyGroupController::class, 'index']);

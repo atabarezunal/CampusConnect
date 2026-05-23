@@ -117,4 +117,12 @@ class AuthController extends Controller
             ->get();
         return response()->json($users);
     }
+    
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+        Auth::logout();
+        \App\Models\User::destroy($user->id);
+        return response()->json(['message' => 'Cuenta eliminada correctamente']);
+    }
 }

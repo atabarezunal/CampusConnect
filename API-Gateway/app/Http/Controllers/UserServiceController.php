@@ -55,4 +55,24 @@ class UserServiceController extends Controller
 
         return response()->json($response->json(), $response->status());
     }
+    
+    public function updateProfile($id, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->patch(env('USER_SERVICE_URL') . "/api/profile/{$id}/update/", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function getUserSkills($id, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->get(env('USER_SERVICE_URL') . "/api/profile/{$id}/skills/");
+
+        return response()->json($response->json(), $response->status());
+    }
 }
