@@ -43,7 +43,7 @@ class AuthController extends Controller
 
         return $this->respondWithToken($token);
     }
-    
+
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -97,5 +97,24 @@ class AuthController extends Controller
                 'role' => Auth::user()->role
             ]
         ]);
+    }
+
+    public function searchUsers(Request $request)
+    {
+        $q = trim($request->query('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+        $currentUserId = Auth::id();
+        $users = User::where('id', '!=', $currentUserId)
+            ->where('role', 'student')
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'LIKE', "%{$q}%")
+                    ->orWhere('email', 'LIKE', "%{$q}%");
+            })
+            ->select('id', 'name', 'email')
+            ->limit(3)
+            ->get();
+        return response()->json($users);
     }
 }

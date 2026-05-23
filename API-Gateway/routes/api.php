@@ -62,5 +62,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/tasks/{id_project}', [ProjectController::class, 'getTasks']);
         //MICROSERVICIO DE NOTIFICACIONES
         Route::get('/my-notifications', [NotificationController::class, 'getMyNotifications']);
+
+        //BUSQUEDAS
+        Route::get('/users/search', [AuthController::class, 'searchUsers']);
     });
 });

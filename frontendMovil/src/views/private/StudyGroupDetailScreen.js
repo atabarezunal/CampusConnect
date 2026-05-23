@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { InviteMemberModal } from '../../components/InviteMemberModal';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -19,6 +20,7 @@ import {
   Shield,
   Trash2,
   User,
+  UserPlus,
   UserMinus,
   UsersRound,
 } from 'lucide-react-native';
@@ -74,7 +76,7 @@ export function StudyGroupDetailScreen({ navigation, route }) {
   const [members,        setMembers]        = useState([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [myRole,         setMyRole]         = useState(null);
-
+  const [inviteModalVisible, setInviteModalVisible] = useState(false);
   // ── Sesiones via hook ─────────────────────────────────────────────────────
   const loadSessions = useCallback(
     (token) => (groupId ? studyGroupService.getSessions(groupId, token) : []),
@@ -328,6 +330,18 @@ export function StudyGroupDetailScreen({ navigation, route }) {
   // ── Render: tab Miembros ──────────────────────────────────────────────────
   const renderMembers = () => (
     <View style={styles.tabContent}>
+      {/* Botón invitar — solo líder */}
+      {isLeader && (
+      <Pressable
+        onPress={() => setInviteModalVisible(true)}
+        style={styles.inviteRow}
+      >
+        <UserPlus size={16} color={colors.primary} />
+        <AppText variant="section" color={colors.primary}>
+          Invitar persona
+        </AppText>
+      </Pressable>
+      )}
       {loadingMembers ? (
         <View style={styles.emptyBox}>
           <AppText variant="caption" color={colors.muted}>
@@ -396,6 +410,13 @@ export function StudyGroupDetailScreen({ navigation, route }) {
           );
         })
       )}
+      {/* Modal */}
+      <InviteMemberModal
+        visible={inviteModalVisible}
+        groupId={groupId}
+        accessToken={accessToken}
+        onClose={() => setInviteModalVisible(false)}
+      />
     </View>
   );
 
@@ -612,6 +633,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+    inviteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
   },
 
   // ── Chat bar ──────────────────────────────────────────────────────────────

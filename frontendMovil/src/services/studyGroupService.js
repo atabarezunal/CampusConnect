@@ -71,4 +71,9 @@ export const studyGroupService = {
       token,
     });
   },
+
+  searchUsers(q, token) {
+    return apiRequest(`/users/search?q=${encodeURIComponent(q)}`, { token });
+  },
+  
 };
