@@ -38,8 +38,6 @@ import { studyGroupService } from '../../services/studyGroupService';
 import { projectService } from '../../services/projectService';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 
-const AVATAR_KEY = 'user_avatar_uri';
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ProfileScreen({ navigation }) {
@@ -49,10 +47,11 @@ export function ProfileScreen({ navigation }) {
   const [avatarUri, setAvatarUri] = useState(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(AVATAR_KEY).then((uri) => {
+    if (!user?.id) return;
+    AsyncStorage.getItem(`user_avatar_uri_${user.id}`).then((uri) => {
       if (uri) setAvatarUri(uri);
     });
-  }, []);
+  }, [user?.id]);
 
   const handlePickAvatar = () => {
     Alert.alert('Foto de perfil', 'Elige una opción', [
@@ -69,7 +68,7 @@ export function ProfileScreen({ navigation }) {
           if (!result.canceled) {
             const uri = result.assets[0].uri;
             setAvatarUri(uri);
-            await AsyncStorage.setItem(AVATAR_KEY, uri);
+            await AsyncStorage.setItem(`user_avatar_uri_${user.id}`, uri);
           }
         },
       },
@@ -86,7 +85,7 @@ export function ProfileScreen({ navigation }) {
           if (!result.canceled) {
             const uri = result.assets[0].uri;
             setAvatarUri(uri);
-            await AsyncStorage.setItem(AVATAR_KEY, uri);
+            await AsyncStorage.setItem(`user_avatar_uri_${user.id}`, uri);
           }
         },
       },
