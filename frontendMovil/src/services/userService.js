@@ -13,6 +13,18 @@ export const userService = {
     });
   },
 
+  updateProfile(userId, payload, token) {
+    return apiRequest(`/profile/${userId}`, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+  },
+
+  getUserSkills(userId, token) {
+    return apiRequest(`/profile/${userId}/skills`, { token });
+  },
+
   getSkills(token) {
     return apiRequest('/skills', { token });
   },
@@ -30,6 +42,13 @@ export const userService = {
       method: 'POST',
       token,
       body: payload,
+    });
+  },
+
+  deleteAccount(token) {
+    return apiRequest('/account', {
+      method: 'DELETE',
+      token,
     });
   },
 };

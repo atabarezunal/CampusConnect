@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Profile
-from .serializers import ProfileSerializer
+from .serializers import ProfileSerializer, UserSkillSerializer
 from .models import Skill, UserSkill, Profile
 from .serializers import SkillSerializer
 
@@ -58,3 +58,22 @@ def assign_skill(request):
         return Response({"message": "Skill asignada correctamente"})
     except Exception as e:
         return Response({"error": str(e)}, status=400)
+    
+@api_view(['PATCH'])
+def update_profile(request, user_id):
+    profile = Profile.objects.filter(user_id=user_id).first()
+    if not profile:
+        return Response({'error': 'Perfil no encontrado'}, status=404)
+    serializer = ProfileSerializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=400)
+
+@api_view(['GET'])
+def get_user_skills(request, user_id):
+    profile = Profile.objects.filter(user_id=user_id).first()
+    if not profile:
+        return Response([], status=200)
+    user_skills = UserSkill.objects.filter(profile=profile).select_related('skill')
+    return Response(UserSkillSerializer(user_skills, many=True).data)
