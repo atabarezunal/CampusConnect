@@ -15,23 +15,10 @@ import { useServiceData } from '../../hooks/useServiceData';
 import { projectService } from '../../services/projectService';
 import { colors, radius, spacing } from '../../theme/tokens';
 
-const STATUS_LABELS = {
-  completed: 'Completado',
-  done:      'Completado',
-  in_progress: 'En Progreso',
-  pending:   'Pendiente',
-};
-
-function getProjectProgress(tasks = []) {
-  if (!tasks.length) return 0;
-  const done = tasks.filter(
-    (t) => t.status === 'completed' || t.status === 'done'
-  ).length;
-  return Math.round((done / tasks.length) * 100);
-}
+const FILTERS = ['Todos', 'En Progreso', 'Completados'];
 
 export function ProjectsScreen({ navigation }) {
-  const [query,      setQuery]      = useState('');
+  const [query,        setQuery]        = useState('');
   const [activeFilter, setActiveFilter] = useState('Todos');
 
   const loadProjects = useCallback((token) => projectService.list(token), []);
@@ -39,12 +26,23 @@ export function ProjectsScreen({ navigation }) {
 
   const filtered = useMemo(() => {
     if (!projects) return [];
-    return projects.filter((p) =>
-      `${p.title || ''} ${p.description || ''}`
+    return projects.filter((p) => {
+      // Filtro de texto
+      const matchesQuery = `${p.title || ''} ${p.description || ''}`
         .toLowerCase()
-        .includes(query.toLowerCase())
-    );
-  }, [projects, query]);
+        .includes(query.toLowerCase());
+
+      // Filtro de estado usando el progreso que ya viene del backend
+      const progress = p.progress ?? 0;
+      const matchesFilter =
+        activeFilter === 'Todos'       ? true :
+        activeFilter === 'Completados' ? progress === 100 :
+        activeFilter === 'En Progreso' ? progress < 100 :
+        true;
+
+      return matchesQuery && matchesFilter;
+    });
+  }, [projects, query, activeFilter]);
 
   return (
     <Screen>
@@ -58,7 +56,6 @@ export function ProjectsScreen({ navigation }) {
         />
       </View>
 
-      {/* Barra de búsqueda compacta */}
       <View style={styles.searchRow}>
         <View style={styles.searchWrap}>
           <SearchInput
@@ -71,7 +68,7 @@ export function ProjectsScreen({ navigation }) {
       </View>
 
       <View style={styles.filterRow}>
-        {['Todos', 'En Progreso', 'Completados'].map((f) => (
+        {FILTERS.map((f) => (
           <Pressable key={f} onPress={() => setActiveFilter(f)}>
             <Chip label={f} active={activeFilter === f} />
           </Pressable>
@@ -89,7 +86,7 @@ export function ProjectsScreen({ navigation }) {
 
       <View style={styles.list}>
         {filtered.map((project) => {
-          const progress = getProjectProgress(project.tasks ?? []);
+          const progress = project.progress ?? 0;
           return (
             <Pressable
               key={project.id_project ?? project.id}
@@ -104,7 +101,7 @@ export function ProjectsScreen({ navigation }) {
                     <AppText variant="section" numberOfLines={2}>
                       {project.title}
                     </AppText>
-                    <AppText variant="caption" color={colors.secondary}>
+                    <AppText variant="caption" color={colors.secondary} numberOfLines={1}>
                       {project.description}
                     </AppText>
                   </View>
@@ -123,22 +120,18 @@ export function ProjectsScreen({ navigation }) {
                   </AppText>
                 </View>
                 <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress}%` }]} />
+                  <View
+                    style={[
+                      styles.progressFill,
+                      { width: progress > 0 ? `${progress}%` : '2%' },
+                    ]}
+                  />
                 </View>
 
                 <View style={styles.metaRow}>
-                  <View style={styles.metaItem}>
-                    <MessageSquare size={14} color={colors.muted} />
-                    <AppText variant="caption" color={colors.secondary}>
-                      Chat
-                    </AppText>
-                  </View>
-                  <View style={styles.metaItem}>
-                    <Paperclip size={14} color={colors.muted} />
-                    <AppText variant="caption" color={colors.secondary}>
-                      Archivos
-                    </AppText>
-                  </View>
+                  <AppText variant="caption" color={colors.muted}>
+                    {project.task_done ?? 0}/{project.task_total ?? 0} tareas completadas
+                  </AppText>
                 </View>
               </Card>
             </Pressable>
@@ -162,20 +155,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  searchWrap: {
-    flex: 1,
-  },
+  searchWrap: { flex: 1 },
   filterRow: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  list: {
-    gap: spacing.md,
-  },
-  projectCard: {
-    gap: spacing.md,
-  },
+  list: { gap: spacing.md },
+  projectCard: { gap: spacing.md },
   projectHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -212,12 +199,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
   },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  bold: {
-    fontWeight: '800',
-  },
+  bold: { fontWeight: '800' },
 });
