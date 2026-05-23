@@ -24,21 +24,29 @@ class ProjectService:
     @staticmethod
     def get_user_projects(user_id):
         uid = int(user_id)
-        # Proyectos donde es owner o miembro
         member_project_ids = db.session.query(ProjectMember.id_project)\
             .filter(ProjectMember.user_id == uid).subquery()
         projects = Project.query.filter(
             db.or_(
                 Project.owner_id == uid,
                 Project.id_project.in_(member_project_ids)
-            )
-        ).all()
-        return [{
-            "id_project": p.id_project,
-            "title":       p.title,
-            "description": p.description,
-            "owner_id":    p.owner_id,
-        } for p in projects], 200
+            )).all()
+        result = []
+        for p in projects:
+            tasks = Task.query.filter_by(id_project=p.id_project).all()
+            total = len(tasks)
+            done  = sum(1 for t in tasks if t.status in ('completed', 'done'))
+            progress = round((done / total) * 100) if total > 0 else 0
+            result.append({
+                "id_project":   p.id_project,
+                "title":        p.title,
+                "description":  p.description,
+                "owner_id":     p.owner_id,
+                "task_total":   total,
+                "task_done":    done,
+                "progress":     progress,
+            })
+        return result, 200
 
     @staticmethod
     def delete_project(id_project, current_user_id):
