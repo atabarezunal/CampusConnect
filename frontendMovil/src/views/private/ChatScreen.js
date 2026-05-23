@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, FlatList } from "react-native";
+import { View, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 
 import { ref, onValue } from "firebase/database";
 
@@ -12,7 +12,6 @@ import { colors, spacing } from "../../theme/tokens";
 
 export function ChatScreen({ route }) {
   const { groupId } = route.params;
-
   const { user, accessToken } = useAuth();
 
   const [messages, setMessages] = useState([]);
@@ -43,7 +42,6 @@ export function ChatScreen({ route }) {
 
     try {
       setLoading(true);
-
       await chatService.sendMessage(
         groupId,
         {
@@ -52,7 +50,6 @@ export function ChatScreen({ route }) {
         },
         accessToken,
       );
-
       setText("");
     } catch (error) {
       console.log(error);
@@ -63,72 +60,122 @@ export function ChatScreen({ route }) {
 
   return (
     <Screen scroll={false}>
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => {
-          const isMine = item.sender_id === user.id;
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      >
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          style={styles.listContainer}
+          renderItem={({ item }) => {
+            // SOLUCIÓN AL PROBLEMA: Compara usando String() y valida que existan ambas propiedades
+            const isMine = 
+              item?.sender_id && 
+              user?.id && 
+              String(item.sender_id) === String(user.id);
 
-          return (
-            <View
-              style={[
-                styles.message,
-                isMine ? styles.myMessage : styles.otherMessage,
-              ]}
-            >
-              <AppText variant="caption">{item.sender_name}</AppText>
-
-              <AppText>{item.text}</AppText>
-            </View>
-          );
-        }}
-      />
-
-      <View style={styles.footer}>
-        <Input
-          value={text}
-          onChangeText={setText}
-          placeholder="Escribe un mensaje"
-          style={styles.input}
+            return (
+              <View style={[styles.messageWrapper, isMine ? styles.myWrapper : styles.otherWrapper]}>
+                {/* Nombre del remitente: Solo se muestra si el mensaje NO es tuyo */}
+                {!isMine && (
+                  <AppText variant="caption" style={styles.senderName}>
+                    {item.sender_name}
+                  </AppText>
+                )}
+                
+                {/* Globo del mensaje */}
+                <View style={[styles.messageBubble, isMine ? styles.myBubble : styles.otherBubble]}>
+                  <AppText style={isMine ? styles.myText : styles.otherText}>
+                    {item.text}
+                  </AppText>
+                </View>
+              </View>
+            );
+          }}
         />
 
-        <Button title="Enviar" onPress={handleSend} loading={loading} />
-      </View>
+        <View style={styles.footer}>
+          <View style={styles.inputContainer}>
+            <Input
+              value={text}
+              onChangeText={setText}
+              placeholder="Escribe un mensaje"
+              style={styles.input}
+            />
+          </View>
+
+          <Button title="Enviar" onPress={handleSend} loading={loading} />
+        </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  listContainer: {
+    flex: 1,
+  },
   list: {
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-
-  message: {
-    padding: spacing.md,
-    borderRadius: 12,
-    maxWidth: "80%",
+  messageWrapper: {
+    maxWidth: "75%",
+    marginBottom: 4,
   },
-
-  myMessage: {
-    backgroundColor: colors.primary,
-    alignSelf: "flex-end",
+  myWrapper: {
+    alignSelf: "flex-end", // Tus mensajes a la derecha
   },
-
-  otherMessage: {
-    backgroundColor: colors.surface,
-    alignSelf: "flex-start",
+  otherWrapper: {
+    alignSelf: "flex-start", // Los otros a la izquierda
   },
-
+  senderName: {
+    color: colors.textMuted || "#8E8E93",
+    fontSize: 12,
+    marginBottom: 2,
+    marginLeft: 4,
+  },
+  messageBubble: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  myBubble: {
+    backgroundColor: "#007AFF", // Azul iMessage
+    borderBottomRightRadius: 4,
+  },
+  otherBubble: {
+    backgroundColor: colors.surface || "#E5E5EA", // Gris claro
+    borderBottomLeftRadius: 4,
+  },
+  myText: {
+    color: "#FFFFFF", // Letras blancas
+  },
+  otherText: {
+    color: "#000000", // Letras negras
+  },
   footer: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingBottom: Platform.OS === "ios" ? spacing.xl : spacing.md,
+    paddingTop: spacing.sm,
+    backgroundColor: colors.background,
   },
-
-  input: {
+  inputContainer: {
     flex: 1,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  input: {
+    width: "100%",
   },
 });

@@ -36,4 +36,8 @@ router.post('/:groupId/chat', authMiddleware, chatController.createChat);
 router.post('/:groupId/messages', authMiddleware, chatController.sendMessage);
 router.get('/:groupId/messages', authMiddleware, chatController.getMessages);
 
+router.get('/:groupId/members',  authMiddleware, controller.getMembers);
+router.delete('/:groupId/members', authMiddleware, controller.removeMember);  
+router.delete('/:groupId',       authMiddleware, controller.deleteGroup);
+
 module.exports = router;

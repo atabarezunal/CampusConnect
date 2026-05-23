@@ -52,4 +52,23 @@ export const studyGroupService = {
       body: { invitationId },
     });
   },
+
+  getMembers(groupId, token) {
+    return apiRequest(`/study-groups/${groupId}/members`, { token });
+  },
+
+  removeMember(groupId, targetUserId, token) {
+    return apiRequest(`/study-groups/${groupId}/members`, {
+      method: 'DELETE',
+      token,
+      body: { targetUserId },
+    });
+  },
+
+  deleteGroup(groupId, token) {
+    return apiRequest(`/study-groups/${groupId}`, {
+      method: 'DELETE',
+      token,
+    });
+  },
 };

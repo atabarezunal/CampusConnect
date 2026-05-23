@@ -150,4 +150,54 @@ class StudyGroupController extends Controller
 
         return response()->json($response->json(), $response->status());
     }
+
+    public function getMembers(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->get(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/members");
+
+        if (!$response->successful()) {
+            return response()->json($response->json(), $response->status());
+        }
+        $members = $response->json(); 
+        $userIds = collect($members)->pluck('userId')->map(fn($id) => (int) $id)->all();
+        $users   = \App\Models\User::whereIn('id', $userIds)
+            ->get(['id', 'name', 'email'])
+            ->keyBy('id');
+        $enriched = collect($members)->map(function ($member) use ($users) {
+            $user = $users->get((int) $member['userId']);
+            return [
+                'userId'    => $member['userId'],
+                'name'      => $user?->name  ?? 'Usuario desconocido',
+                'email'     => $user?->email ?? '',
+                'role'      => $member['role'],
+                'joined_at' => $member['joined_at'] ?? null,
+            ];
+        });
+        return response()->json($enriched);
+    }
+
+    public function removeMember(string $groupId, Request $request)
+    {
+        $request->validate(['targetUserId' => 'required']);
+
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->delete(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}/members", $request->all());
+
+        return response()->json($response->json(), $response->status());
+    }
+
+    public function deleteGroup(string $groupId, Request $request)
+    {
+        $response = Http::withHeaders([
+            'Authorization'  => $request->header('Authorization'),
+            'X-INTERNAL-KEY' => env('INTERNAL_API_KEY')
+        ])->delete(env('STUDY_SERVICE_URL') . "/api/study/{$groupId}");
+
+        return response()->json($response->json(), $response->status());
+    }
 }
