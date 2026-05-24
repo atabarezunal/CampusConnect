@@ -45,13 +45,6 @@ export function StudyGroupsScreen({ navigation }) {
 
       <View style={styles.searchRow}>
         <SearchInput value={query} onChangeText={setQuery} placeholder="Buscar grupos..." />
-        <IconButton icon={SlidersHorizontal} accessibilityLabel="Filtros" />
-      </View>
-
-      <View style={styles.filterRow}>
-        <Chip label="Todos" active />
-        <Chip label="Mis Grupos" />
-        <Chip label="Sugeridos" />
       </View>
 
       <ErrorBanner message={error} />
@@ -104,11 +97,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   searchRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  filterRow: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.md,

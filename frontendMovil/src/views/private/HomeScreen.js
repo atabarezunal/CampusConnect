@@ -78,7 +78,6 @@ export function HomeScreen({ navigation }) {
 
       <View style={styles.searchRow}>
         <SearchInput value={query} onChangeText={setQuery} placeholder="Buscar grupos, proyectos..." />
-        <IconButton icon={SlidersHorizontal} accessibilityLabel="Filtros" />
       </View>
 
       <ErrorBanner message={groupsState.error || projectsState.error || notificationsState.error} />

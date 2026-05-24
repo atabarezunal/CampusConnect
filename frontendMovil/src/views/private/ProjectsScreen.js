@@ -64,7 +64,6 @@ export function ProjectsScreen({ navigation }) {
             placeholder="Buscar proyectos..."
           />
         </View>
-        <IconButton icon={SlidersHorizontal} accessibilityLabel="Filtros" />
       </View>
 
       <View style={styles.filterRow}>

@@ -75,5 +75,11 @@ export const studyGroupService = {
   searchUsers(q, token) {
     return apiRequest(`/users/search?q=${encodeURIComponent(q)}`, { token });
   },
-  
+  assignRole(payload, token) {
+    return apiRequest('/study-groups/assign-role', {
+      method: 'PUT',
+      token,
+      body: payload,
+    });
+  },
 };

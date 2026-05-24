@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
-
+import { View, Pressable, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { ref, onValue } from "firebase/database";
 
 import { AppText, Button, Input, Screen } from "../../components/ui";
@@ -10,7 +10,7 @@ import { chatService } from "../../services/chatService";
 import { useAuth } from "../../hooks/useAuth";
 import { colors, spacing } from "../../theme/tokens";
 
-export function ChatScreen({ route }) {
+export function ChatScreen({ route, navigation }) {
   const { groupId } = route.params;
   const { user, accessToken } = useAuth();
 
@@ -60,11 +60,20 @@ export function ChatScreen({ route }) {
 
   return (
     <Screen scroll={false}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
+        {/* ── Header con botón volver ── */}
+        <View style={styles.header}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <ArrowLeft size={22} color={colors.text} />
+          </Pressable>
+          <AppText variant="section">Chat del grupo</AppText>
+          <View style={styles.backBtn} /> 
+        {/* spacer para centrar el título */}
+        </View>
         <FlatList
           data={messages}
           keyExtractor={(item) => item.id}
@@ -177,5 +186,20 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import {
   Alert,
   ActivityIndicator,
@@ -416,82 +417,94 @@ function ProjectInviteModal({ visible, projectId, accessToken, onClose, onInvite
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={mStyles.overlay} onPress={onClose}>
-        <Pressable style={mStyles.sheet} onPress={(e) => e.stopPropagation()}>
-          <View style={mStyles.header}>
-            <AppText variant="section">Añadir miembro</AppText>
-            <IconButton icon={X} onPress={onClose} accessibilityLabel="Cerrar" />
-          </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={mStyles.overlay} onPress={onClose}>
+          <Pressable style={mStyles.sheet} onPress={(e) => e.stopPropagation()}>
 
-          {/* Selector de rol */}
-          <View style={mStyles.roleRow}>
-            {ASSIGNABLE_ROLES.map((r) => (
-              <Pressable key={r} onPress={() => setRole(r)}>
-                <Chip label={ROLE_META[r].label} active={role === r} />
-              </Pressable>
-            ))}
-          </View>
+            <View style={mStyles.handle} />
 
-          {/* Búsqueda */}
-          <View style={mStyles.searchRow}>
-            <TextInput
-              value={query}
-              onChangeText={handleSearch}
-              placeholder="Buscar por nombre o correo…"
-              placeholderTextColor={colors.muted}
-              style={mStyles.searchInput}
-              autoFocus
-              autoCapitalize="none"
-            />
-            {searching && <ActivityIndicator size="small" color={colors.primary} />}
-          </View>
+            <View style={mStyles.header}>
+              <AppText variant="section">Añadir miembro</AppText>
+              <IconButton icon={X} onPress={onClose} accessibilityLabel="Cerrar" />
+            </View>
 
-          {/* Resultados */}
-          <View style={mStyles.resultList}>
-            {results.map((u) => {
-              const added   = addedIds.has(u.id);
-              const loading = adding === u.id;
-              return (
-                <Card key={u.id} style={mStyles.resultRow}>
-                  <View style={mStyles.avatar}>
-                    <AppText variant="caption">{getInitials(u.name)}</AppText>
-                  </View>
-                  <View style={mStyles.userInfo}>
-                    <AppText variant="section">{u.name}</AppText>
-                    <AppText variant="caption" color={colors.muted}>{u.email}</AppText>
-                  </View>
-                  {added ? (
-                    <View style={mStyles.addedBadge}>
-                      <AppText variant="caption" color="#10B981">Añadido</AppText>
+            <View style={mStyles.roleRow}>
+              {ASSIGNABLE_ROLES.map((r) => (
+                <Pressable key={r} onPress={() => setRole(r)}>
+                  <Chip label={ROLE_META[r].label} active={role === r} />
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={mStyles.searchRow}>
+              <TextInput
+                value={query}
+                onChangeText={handleSearch}
+                placeholder="Buscar por nombre o correo…"
+                placeholderTextColor={colors.muted}
+                style={mStyles.searchInput}
+                autoFocus
+                autoCapitalize="none"
+                returnKeyType="search"
+              />
+              {searching && <ActivityIndicator size="small" color={colors.primary} />}
+            </View>
+
+            {/* ScrollView con keyboardShouldPersistTaps para que los botones funcionen */}
+            <ScrollView
+              style={{ maxHeight: 260 }}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {results.map((u) => {
+                const added   = addedIds.has(u.id);
+                const loading = adding === u.id;
+                return (
+                  <Card key={u.id} style={[mStyles.resultRow, { marginBottom: spacing.sm }]}>
+                    <View style={mStyles.avatar}>
+                      <AppText variant="caption">{getInitials(u.name)}</AppText>
                     </View>
-                  ) : (
-                    <Pressable
-                      onPress={() => handleAdd(u)}
-                      disabled={!!adding}
-                      style={[mStyles.addBtn, !!adding && mStyles.addBtnDisabled]}
-                    >
-                      {loading
-                        ? <ActivityIndicator size="small" color="#fff" />
-                        : <UserPlus size={16} color="#fff" />
-                      }
-                    </Pressable>
-                  )}
-                </Card>
-              );
-            })}
-            {query.trim().length >= 2 && !searching && results.length === 0 && (
-              <View style={mStyles.emptyBox}>
-                <AppText variant="caption" color={colors.muted}>Sin resultados</AppText>
-              </View>
-            )}
-            {query.trim().length < 2 && (
-              <AppText variant="caption" color={colors.muted} style={mStyles.hint}>
-                Escribe al menos 2 caracteres
-              </AppText>
-            )}
-          </View>
+                    <View style={mStyles.userInfo}>
+                      <AppText variant="section">{u.name}</AppText>
+                      <AppText variant="caption" color={colors.muted}>{u.email}</AppText>
+                    </View>
+                    {added ? (
+                      <View style={mStyles.addedBadge}>
+                        <AppText variant="caption" color="#10B981">Añadido</AppText>
+                      </View>
+                    ) : (
+                      <Pressable
+                        onPress={() => handleAdd(u)}
+                        disabled={!!adding}
+                        style={[mStyles.addBtn, !!adding && mStyles.addBtnDisabled]}
+                      >
+                        {loading
+                          ? <ActivityIndicator size="small" color="#fff" />
+                          : <UserPlus size={16} color="#fff" />
+                        }
+                      </Pressable>
+                    )}
+                  </Card>
+                );
+              })}
+              {query.trim().length >= 2 && !searching && results.length === 0 && (
+                <View style={mStyles.emptyBox}>
+                  <AppText variant="caption" color={colors.muted}>Sin resultados</AppText>
+                </View>
+              )}
+              {query.trim().length < 2 && (
+                <AppText variant="caption" color={colors.muted} style={mStyles.hint}>
+                  Escribe al menos 2 caracteres
+                </AppText>
+              )}
+            </ScrollView>
+
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -656,6 +669,13 @@ const mStyles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     borderColor: '#10B981',
+  },
+  handle: {
+    width: 40, height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.xs,
   },
   emptyBox: { padding: spacing.md, alignItems: 'center' },
   hint: { textAlign: 'center', marginTop: spacing.sm },

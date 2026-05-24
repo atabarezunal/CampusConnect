@@ -156,29 +156,25 @@ export function StudyGroupDetailScreen({ navigation, route }) {
   };
 
   // ── Asignar rol ───────────────────────────────────────────────────────────
+  const [rolePickerMember, setRolePickerMember] = useState(null); // nuevo estado
+
   const handleAssignRole = (member) => {
     if (!isLeader) return;
-    Alert.alert(
-      `Cambiar rol de ${member.name}`,
-      'Selecciona el nuevo rol',
-      [
-        ...ASSIGNABLE_ROLES.map((role) => ({
-          text: ROLE_META[role]?.label ?? role,
-          onPress: async () => {
-            try {
-              await studyGroupService.assignRole(
-                { groupId, targetUserId: member.userId, role },
-                accessToken
-              );
-              await fetchMembers();
-            } catch (e) {
-              Alert.alert('Error', e.message);
-            }
-          },
-        })),
-        { text: 'Cancelar', style: 'cancel' },
-      ]
-    );
+    setRolePickerMember(member); // abre el picker inline en vez de Alert
+  };
+  const confirmAssignRole = async (role) => {
+    const member = rolePickerMember;
+    setRolePickerMember(null);
+    if (!member) return;
+    try {
+      await studyGroupService.assignRole(
+        { groupId, targetUserId: String(member.userId), role },
+        accessToken
+      );
+      await fetchMembers();
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    }
   };
 
   // ── Expulsar miembro ──────────────────────────────────────────────────────
@@ -417,6 +413,36 @@ export function StudyGroupDetailScreen({ navigation, route }) {
         accessToken={accessToken}
         onClose={() => setInviteModalVisible(false)}
       />
+      {/* Picker de rol */}
+      {rolePickerMember && (
+        <View style={styles.rolePicker}>
+          <AppText variant="section" style={{ marginBottom: spacing.sm }}>
+            Rol para {rolePickerMember.name}
+          </AppText>
+          {ASSIGNABLE_ROLES.map((r) => {
+            const meta = ROLE_META[r];
+            const RoleIcon = meta.Icon;
+            return (
+              <Pressable
+                key={r}
+                onPress={() => confirmAssignRole(r)}
+                style={styles.roleOption}
+              >
+                <RoleIcon size={16} color={meta.color ?? colors.secondary} />
+                <AppText variant="section" color={meta.color ?? colors.secondary}>
+                  {meta.label}
+                </AppText>
+              </Pressable>
+            );
+          })}
+          <Pressable
+            onPress={() => setRolePickerMember(null)}
+            style={[styles.roleOption, { borderTopWidth: 1, borderTopColor: colors.border }]}
+          >
+            <AppText variant="caption" color={colors.muted}>Cancelar</AppText>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 
@@ -644,6 +670,19 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     borderStyle: 'dashed',
     justifyContent: 'center',
+  },
+  rolePicker: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
   },
 
   // ── Chat bar ──────────────────────────────────────────────────────────────
