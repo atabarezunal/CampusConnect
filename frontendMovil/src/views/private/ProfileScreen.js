@@ -4,8 +4,10 @@ import {
   Alert,
   Modal,
   Pressable,
+  KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
+  Platform,
   TextInput,
   View,
 } from 'react-native';
@@ -233,7 +235,7 @@ export function ProfileScreen({ navigation }) {
       {/* Preferencias */}
       <AppText variant="section" style={styles.section}>Preferencias</AppText>
       <Preference icon={Bell}     title="Notificaciones" onPress={handleNotifications} />
-      <Preference icon={Settings} title="Privacidad"     onPress={() => {}} />
+
 
       {/* Logout */}
       <View style={styles.logout}>
@@ -354,13 +356,24 @@ function CareerModal({ visible, profile, userSkills, userId, accessToken, onClos
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={mStyles.overlay} onPress={onClose}>
-        <Pressable style={mStyles.sheet} onPress={(e) => e.stopPropagation()}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={mStyles.overlay} onPress={onClose}>
+          <Pressable style={mStyles.sheet} onPress={(e) => e.stopPropagation()}>
+
+            {/* Handle */}
+            <View style={mStyles.handle} />
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
             {/* Header */}
             <View style={mStyles.header}>
-              <AppText variant="section">Perfil académico</AppText>
-              <IconButton icon={X} onPress={onClose} accessibilityLabel="Cerrar" />
+                <AppText variant="section">Perfil académico</AppText>
+                <IconButton icon={X} onPress={onClose} accessibilityLabel="Cerrar" />
             </View>
 
             {/* Semestre */}
@@ -488,9 +501,10 @@ function CareerModal({ visible, profile, userSkills, userId, accessToken, onClos
               </Pressable>
             </View>
 
-          </ScrollView>
+            </ScrollView>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -732,5 +746,13 @@ const mStyles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.border,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
   },
 });
