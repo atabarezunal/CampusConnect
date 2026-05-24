@@ -512,8 +512,6 @@ export function StudyGroupDetailScreen({ navigation, route }) {
         {/* Barra de chat fija, solo visible en tab Chat */}
         {activeTab === 'Chat' && (
           <View style={styles.chatBar}>
-            <IconButton icon={Paperclip} accessibilityLabel="Adjuntar" />
-            <IconButton icon={Image}     accessibilityLabel="Imagen"   />
             <TextInput
               value={chatText}
               onChangeText={setChatText}
